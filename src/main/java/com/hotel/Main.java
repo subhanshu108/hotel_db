@@ -127,17 +127,17 @@ public class Main {
             char[] pwd = passwordField.getPassword();
             return pwd == null ? null : new String(pwd);
         } else {
-            return null; // user cancelled
+            return null;
         }
     }
 
-    // Simple email validation using regex
+
     private static boolean isValidEmail(String email) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         return email.matches(emailRegex);
     }
 
-    // ===== ADMIN MENU =====
+
     private static void adminMenu(User admin) throws SQLException {
         while (true) {
             System.out.println("\n=== ADMIN MENU ===");
