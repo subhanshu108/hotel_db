@@ -8,6 +8,8 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Scanner;
+import javax.swing.*;
+
 
 public class Main {
 
@@ -27,7 +29,13 @@ public class Main {
             System.out.println("2. Login");
             System.out.println("0. Exit");
             System.out.print("Choice: ");
-            int choice = Integer.parseInt(scanner.nextLine());
+            int choice;
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number.");
+                continue;
+            }
 
             switch (choice) {
                 case 1 -> register();
@@ -44,10 +52,24 @@ public class Main {
     private static void register() {
         System.out.print("Username: ");
         String username = scanner.nextLine();
-        System.out.print("Email: ");
-        String email = scanner.nextLine();
-        System.out.print("Password: ");
-        String password = scanner.nextLine();
+
+        // Loop until a valid email is entered
+        String email;
+        while (true) {
+            System.out.print("Email: ");
+            email = scanner.nextLine();
+            if (isValidEmail(email)) {
+                break;
+            } else {
+                System.out.println("Invalid email format. Please enter a valid email.");
+            }
+        }
+
+        String password = readPassword("Enter password for registration:");
+        if (password == null) {
+            System.out.println("Registration cancelled.");
+            return;
+        }
 
         // default role = user (2)
         boolean success = userService.registerUser(username, email, password, 2);
@@ -57,8 +79,12 @@ public class Main {
     private static void login() throws SQLException {
         System.out.print("Username: ");
         String username = scanner.nextLine();
-        System.out.print("Password: ");
-        String password = scanner.nextLine();
+
+        String password = readPassword("Enter password to login:");
+        if (password == null) {
+            System.out.println("Login cancelled.");
+            return;
+        }
 
         User user = userService.loginUser(username, password);
         if (user == null) {
@@ -73,6 +99,44 @@ public class Main {
         }
     }
 
+    /**
+     * Reads a password either from System.console() (no echo) or, if console is null,
+     * opens a Swing dialog with JPasswordField so the user cannot see the typed characters.
+     * Returns null if the user cancels the dialog.
+     */
+    private static String readPassword(String prompt) {
+        // Try to use the system console first (works when running from a real terminal)
+        if (System.console() != null) {
+            System.out.print(prompt + " ");
+            char[] pwdChars = System.console().readPassword();
+            return pwdChars == null ? null : new String(pwdChars);
+        }
+
+        // Fallback for IDEs (IntelliJ/Eclipse) where System.console() is null:
+        JPasswordField passwordField = new JPasswordField();
+        Object[] dialogContent = {prompt, passwordField};
+        int option = JOptionPane.showConfirmDialog(
+                null,
+                dialogContent,
+                "Password Input",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (option == JOptionPane.OK_OPTION) {
+            char[] pwd = passwordField.getPassword();
+            return pwd == null ? null : new String(pwd);
+        } else {
+            return null; // user cancelled
+        }
+    }
+
+    // Simple email validation using regex
+    private static boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        return email.matches(emailRegex);
+    }
+
     // ===== ADMIN MENU =====
     private static void adminMenu(User admin) throws SQLException {
         while (true) {
@@ -84,14 +148,26 @@ public class Main {
             System.out.println("5. Change food order");
             System.out.println("6. Logout");
             System.out.print("Choice: ");
-            int choice = Integer.parseInt(scanner.nextLine());
+            int choice;
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid number.");
+                continue;
+            }
 
             switch (choice) {
                 case 1 -> listUsers();
                 case 2 -> changeUserRole();
                 case 3 -> manageRoomTypes();
                 case 4 -> manageRooms();
-                case 5 -> changeFoodOrder();
+                case 5 -> {
+                    try {
+                        changeFoodOrder();
+                    } catch (SQLException e) {
+                        System.out.println("Error updating food: " + e.getMessage());
+                    }
+                }
                 case 6 -> {
                     System.out.println("Logging out...");
                     return;
@@ -105,7 +181,7 @@ public class Main {
         List<User> users = userService.getAllUsers();
         System.out.println("\nUsers:");
         for (User u : users) {
-            System.out.printf("%d: %s (Role ID: %d)\n", u.getUserId(), u.getUsername(), u.getRoleId());
+            System.out.printf("%d: %s (Role ID: %d)%n", u.getUserId(), u.getUsername(), u.getRoleId());
         }
     }
 
@@ -117,12 +193,13 @@ public class Main {
         boolean success = userService.changeUserRole(userId, roleId);
         System.out.println(success ? "Role updated!" : "Failed to update role.");
     }
+
     private static void changeFoodOrder() throws SQLException {
         System.out.print("Enter Reservation ID: ");
         int reservationId = Integer.parseInt(scanner.nextLine());
         System.out.println("Is the food done? 1. Yes 2. No");
-        int answer =  Integer.parseInt(scanner.nextLine());
-        boolean success = foodService.changeFoodStatus(reservationId,answer);
+        int answer = Integer.parseInt(scanner.nextLine());
+        boolean success = foodService.changeFoodStatus(reservationId, answer);
         System.out.println(success ? "Food updated!" : "Failed to update food.");
     }
 
@@ -145,7 +222,8 @@ public class Main {
             case 2 -> {
                 var list = roomTypeService.getAllRoomTypes();
                 for (var r : list) {
-                    System.out.printf("%d: %s - %.2f - %s\n", r.getRoomTypeId(), r.getTypeName(), r.getPrice(), r.getDescription());
+                    System.out.printf("%d: %s - %.2f - %s%n",
+                            r.getRoomTypeId(), r.getTypeName(), r.getPrice(), r.getDescription());
                 }
             }
             default -> System.out.println("Invalid choice.");
@@ -171,7 +249,8 @@ public class Main {
             case 2 -> {
                 var list = roomService.getAllRooms();
                 for (var r : list) {
-                    System.out.printf("%d: %s - Type ID: %d - Status: %s\n", r.getRoomId(), r.getRoomNumber(), r.getRoomTypeId(), r.getStatus());
+                    System.out.printf("%d: %s - Type ID: %d - Status: %s%n",
+                            r.getRoomId(), r.getRoomNumber(), r.getRoomTypeId(), r.getStatus());
                 }
             }
             default -> System.out.println("Invalid choice.");
@@ -186,7 +265,8 @@ public class Main {
             System.out.println("2. Order Laundry");
             System.out.println("3. Order Food");
             System.out.println("4. Book Cab Service");
-            System.out.println("5. Logout");
+            System.out.println("5. Checkout");
+            System.out.println("6. Exit");
             System.out.print("Choice: ");
             int choice = Integer.parseInt(scanner.nextLine());
 
@@ -196,7 +276,7 @@ public class Main {
                 case 3 -> orderFood(user);
                 case 4 -> bookCab(user);
                 case 5 -> checkOut(user);
-                case 5 -> {
+                case 6 -> {
                     System.out.println("Logging out...");
                     return;
                 }
@@ -204,10 +284,9 @@ public class Main {
             }
         }
     }
-
     private static void checkOut(User user) {
-        int reservation_id = user.getUserId();
-        
+        int userId = user.getUserId();
+        reservationService.checkOut(userId);
     }
 
     private static void makeReservation(User user) {
@@ -217,9 +296,6 @@ public class Main {
         Date checkIn = Date.valueOf(scanner.nextLine());
         System.out.print("Check-out date (yyyy-mm-dd): ");
         Date checkOut = Date.valueOf(scanner.nextLine());
-        System.out.println();
-        System.out.println(checkIn + " - " + checkOut);
-        System.out.println();
         boolean success = reservationService.makeReservation(user.getUserId(), roomId, checkIn, checkOut);
         System.out.println(success ? "Reservation successful!" : "Failed to reserve room.");
     }
@@ -249,7 +325,6 @@ public class Main {
         boolean success = foodService.addFoodOrder(resId, qty, food_item_id);
         System.out.println(success ? "Food ordered!" : "Failed to order food.");
     }
-
 
     private static void bookCab(User user) {
         System.out.print("Reservation ID: ");

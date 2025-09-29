@@ -29,7 +29,7 @@ public class ReservationService {
         return success;
     }
     public void checkOut(int user_id) {
-
+            reservationDao.checkOut(user_id);
     }
 
     public List<Reservation> getAllReservations() {
