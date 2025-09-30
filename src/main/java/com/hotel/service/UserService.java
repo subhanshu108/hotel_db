@@ -10,14 +10,14 @@ public class UserService {
 
     private final UserDao userDao = new UserDao();
 
-    // Register new user
+
     public boolean registerUser(String username, String email, String plainPassword, int roleId) {
         String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
         User user = new User(0, username, hashedPassword, email, roleId);
         return userDao.addUser(user);
     }
 
-    // Login check
+
     public User loginUser(String username, String password) {
         User user = userDao.getUserByUsername(username);
         if (user != null && BCrypt.checkpw(password, user.getPassword())) {
@@ -26,7 +26,7 @@ public class UserService {
         return null;
     }
 
-    // Admin: change user role
+
     public boolean changeUserRole(int userId, int newRoleId) {
         return userDao.updateUserRole(userId, newRoleId);
     }

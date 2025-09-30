@@ -11,7 +11,7 @@ public class ReservationService {
     private final RoomService roomService = new RoomService();
 
     public boolean makeReservation(int userId, int roomId, Date checkIn, Date checkOut) {
-        // Optional: check if room is available
+
         var room = roomService.getRoomById(roomId);
         System.out.println(room);
         if (room == null || !room.getStatus().equalsIgnoreCase("available")) {
@@ -22,7 +22,7 @@ public class ReservationService {
         boolean success = reservationDao.addReservation(reservation);
 
         if (success) {
-            // Mark room as occupied
+
             roomService.updateRoomStatus(roomId, "occupied");
         }
 

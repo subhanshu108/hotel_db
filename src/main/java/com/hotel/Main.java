@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Scanner;
 import javax.swing.*;
 
-
 public class Main {
 
     private static final Scanner scanner = new Scanner(System.in);
@@ -50,28 +49,36 @@ public class Main {
     }
 
     private static void register() {
-        System.out.print("Username: ");
-        String username = scanner.nextLine();
+        String username;
+        while (true) {
+            System.out.print("Username: ");
+            username = scanner.nextLine();
+            if (isValidUsername(username)) {
+                break;
+            } else {
+                System.out.println("Invalid username. Use 3-20 letters, digits, or underscores.");
+            }
+        }
 
-        // Loop until a valid email is entered
         String email;
         while (true) {
             System.out.print("Email: ");
             email = scanner.nextLine();
-            if (isValidEmail(email)) {
-                break;
-            } else {
-                System.out.println("Invalid email format. Please enter a valid email.");
+            if (isValidEmail(email)) break;
+            System.out.println("Invalid email format. Please enter a valid email.");
+        }
+
+        String password;
+        while (true) {
+            password = readPassword("Enter password for registration:");
+            if (password == null) {
+                System.out.println("Registration cancelled.");
+                return;
             }
+            if (isValidPassword(password)) break;
+            System.out.println("Password must be at least 8 characters, contain upper, lower, digit, and special symbol.");
         }
 
-        String password = readPassword("Enter password for registration:");
-        if (password == null) {
-            System.out.println("Registration cancelled.");
-            return;
-        }
-
-        // default role = user (2)
         boolean success = userService.registerUser(username, email, password, 2);
         System.out.println(success ? "User registered successfully!" : "Registration failed!");
     }
@@ -99,20 +106,13 @@ public class Main {
         }
     }
 
-    /**
-     * Reads a password either from System.console() (no echo) or, if console is null,
-     * opens a Swing dialog with JPasswordField so the user cannot see the typed characters.
-     * Returns null if the user cancels the dialog.
-     */
     private static String readPassword(String prompt) {
-        // Try to use the system console first (works when running from a real terminal)
         if (System.console() != null) {
             System.out.print(prompt + " ");
             char[] pwdChars = System.console().readPassword();
             return pwdChars == null ? null : new String(pwdChars);
         }
 
-        // Fallback for IDEs (IntelliJ/Eclipse) where System.console() is null:
         JPasswordField passwordField = new JPasswordField();
         Object[] dialogContent = {prompt, passwordField};
         int option = JOptionPane.showConfirmDialog(
@@ -131,12 +131,20 @@ public class Main {
         }
     }
 
-
     private static boolean isValidEmail(String email) {
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
         return email.matches(emailRegex);
     }
 
+    private static boolean isValidUsername(String username) {
+
+        return username.matches("^[A-Za-z0-9_]{3,20}$");
+    }
+
+    private static boolean isValidPassword(String password) {
+
+        return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$");
+    }
 
     private static void adminMenu(User admin) throws SQLException {
         while (true) {
@@ -257,7 +265,6 @@ public class Main {
         }
     }
 
-    // ===== USER MENU =====
     private static void userMenu(User user) {
         while (true) {
             System.out.println("\n=== USER MENU ===");
@@ -284,6 +291,7 @@ public class Main {
             }
         }
     }
+
     private static void checkOut(User user) {
         int userId = user.getUserId();
         reservationService.checkOut(userId);
@@ -315,10 +323,8 @@ public class Main {
     private static void orderFood(User user) {
         System.out.print("Reservation ID: ");
         int resId = Integer.parseInt(scanner.nextLine());
-
         System.out.print("Food Item (1. Pizza, 2. Burger, 3. Rice): ");
         int food_item_id = Integer.parseInt(scanner.nextLine());
-
         System.out.print("Quantity: ");
         int qty = Integer.parseInt(scanner.nextLine());
 
