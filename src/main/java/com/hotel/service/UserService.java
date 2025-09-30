@@ -11,9 +11,9 @@ public class UserService {
     private final UserDao userDao = new UserDao();
 
 
-    public boolean registerUser(String username, String email, String plainPassword, int roleId) {
+    public boolean registerUser(String username, String email, String plainPassword, int roleId, long aadhar) {
         String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
-        User user = new User(0, username, hashedPassword, email, roleId);
+        User user = new User(0, username, hashedPassword, email, roleId, aadhar);
         return userDao.addUser(user);
     }
 

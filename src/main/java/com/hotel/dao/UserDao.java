@@ -10,7 +10,7 @@ import java.util.List;
 public class UserDao {
 
     public boolean addUser(User user) {
-        String sql = "INSERT INTO users (username, password, email, role_id) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO users (username, password, email, role_id, aadhar) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
@@ -18,6 +18,7 @@ public class UserDao {
             stmt.setString(2, user.getPassword());
             stmt.setString(3, user.getEmail());
             stmt.setInt(4, user.getRoleId());
+            stmt.setLong(5, user.getAadhar());
 
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
@@ -40,7 +41,8 @@ public class UserDao {
                         rs.getString("username"),
                         rs.getString("password"),
                         rs.getString("email"),
-                        rs.getInt("role_id")
+                        rs.getInt("role_id"),
+                        rs.getLong("aadhar")
                 );
             }
 
@@ -63,7 +65,9 @@ public class UserDao {
                         rs.getString("username"),
                         rs.getString("password"),
                         rs.getString("email"),
-                        rs.getInt("role_id")
+                        rs.getInt("role_id"),
+                        rs.getLong("aadhar")
+
                 ));
             }
 

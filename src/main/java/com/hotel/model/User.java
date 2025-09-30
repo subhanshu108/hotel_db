@@ -5,21 +5,24 @@ public class User {
     private String username;
     private String password; // hashed password
     private String email;
-    private int roleId; // 1 = Admin, 2 = User (example)
+    private int roleId;// 1 = Admin, 2 = User (example)
+    private long aadhar;
 
-    public User(int userId, String username, String password, String email, int roleId) {
+    public User(int userId, String username, String password, String email, int roleId, long aadhar) {
         this.userId = userId;
         this.username = username;
         this.password = password;
         this.email = email;
         this.roleId = roleId;
+        this.aadhar = aadhar;
     }
 
-    public User(String username, String password, String email, int roleId) {
+    public User(String username, String password, String email, int roleId, long aadhar) {
         this.username = username;
         this.password = password;
         this.email = email;
         this.roleId = roleId;
+        this.aadhar = aadhar;
     }
 
     // Getters and Setters
@@ -37,4 +40,8 @@ public class User {
 
     public int getRoleId() { return roleId; }
     public void setRoleId(int roleId) { this.roleId = roleId; }
+    public long getAadhar() { return aadhar; }
+    public void setAadhar(long aadhar) {
+        this.aadhar = aadhar;
+    }
 }

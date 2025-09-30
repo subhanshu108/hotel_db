@@ -79,7 +79,38 @@ public class Main {
             System.out.println("Password must be at least 8 characters, contain upper, lower, digit, and special symbol.");
         }
 
-        boolean success = userService.registerUser(username, email, password, 2);
+        long aadhar;
+        while (true) {
+            System.out.print("Enter your aadhar number (must be 12 digits): ");
+            String input = scanner.nextLine();
+            if (input.isEmpty()) {
+                System.out.println("Aadhar cannot be empty.");
+                continue;
+            }
+            try {
+                aadhar = Long.parseLong(input);
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid numeric aadhar number.");
+                continue;
+            }
+
+            if (aadhar <= 0) {
+                System.out.println("Please enter a valid aadhar number.");
+                continue;
+            }
+
+            if (isValidAadhar(aadhar)) {
+                break;
+            } else {
+                System.out.println("Invalid aadhar number.");
+            }
+        }
+
+
+
+
+
+        boolean success = userService.registerUser(username, email, password, 2,aadhar);
         System.out.println(success ? "User registered successfully!" : "Registration failed!");
     }
 
@@ -144,6 +175,9 @@ public class Main {
     private static boolean isValidPassword(String password) {
 
         return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$");
+    }
+    private static boolean isValidAadhar(long aadhar) {
+        return String.valueOf(aadhar).matches("\\d{12}");
     }
 
     private static void adminMenu(User admin) throws SQLException {
